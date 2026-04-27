@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" th:content="${post.excerpt}">
+  <title th:text="${post.title + ' - InkWell'}">Post Title - InkWell</title>
+  
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <meta name="csrf-token" th:content="${_csrf.token}">
+</head>
+<body>
+  <!-- Reading Progress Bar -->
+  <div class="reading-progress" aria-hidden="true">
+    <div class="reading-progress-bar"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar" role="navigation">
+    <div class="navbar-inner">
+      <a href="/" class="navbar-brand">
+        <svg class="navbar-logo" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="6" fill="#10b981"/>
+          <path d="M8 8h4v16H8V8zm6 0h4v12h-4V8zm6 0h4v8h-4V8z" fill="white"/>
+        </svg>
+        InkWell
+      </a>
+      
+      <div class="navbar-actions">
+        <button class="theme-toggle" aria-label="Toggle dark mode">
+          <svg class="theme-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+        <a href="/" class="btn btn-ghost">Back</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <article class="post-reading">
+        <header class="post-reading-header">
+          <div class="post-reading-meta">
+            <div class="post-reading-author">
+              <img th:src="@{/images/avatar.svg}" alt="" class="post-reading-author-avatar">
+              <span th:text="${post.authorName}">Author</span>
+            </div>
+            <span>·</span>
+            <time th:datetime="${post.publishedAt}" th:text="${#temporals.format(post.publishedAt, 'MMMM d, yyyy')}">January 1, 2024</time>
+            <span>·</span>
+            <span th:text="${post.readTimeMin + ' min read'}">5 min read</span>
+          </div>
+          
+          <h1 class="post-reading-title" th:text="${post.title}">Post Title</h1>
+          
+          <div class="flex items-center gap-md">
+            <button class="like-button btn btn-primary" th:data-post-id="${post.postId}"
+                    th:classappend="${post.likedByCurrentUser} ? 'liked'">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              <span class="like-count" th:text="${post.likesCount}">0</span>
+            </button>
+            
+            <button class="btn btn-ghost" aria-label="Share post">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+            </button>
+          </div>
+        </header>
+        
+        <img th:src="${post.featuredImageUrl}" th:alt="${post.title}" 
+             style="width: 100%; border-radius: 12px; margin-bottom: 2rem;"
+             th:if="${post.featuredImageUrl}">
+        
+        <div class="post-reading-content" th:utext="${post.content}">
+          Post content goes here...
+        </div>
+        
+        <!-- Tags -->
+        <div style="margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 0.5rem;" th:if="${not #lists.isEmpty(post.tags)}">
+          <span th:each="tag : ${post.tags}" 
+                class="btn btn-sm btn-secondary" th:text="${tag}">tag</span>
+        </div>
+        
+        <!-- Author Bio -->
+        <div style="padding: 2rem; background: var(--color-bg-secondary); border-radius: 12px; margin-top: 2rem;">
+          <div class="flex items-center gap-md">
+            <img th:src="@{/images/avatar.svg}" alt="" width="64" height="64" style="border-radius: 50%;">
+            <div>
+              <h3 style="margin: 0;" th:text="${post.authorName}">Author Name</h3>
+              <p style="color: var(--color-text-secondary); margin: 0.5rem 0 0;">Writer at InkWell</p>
+            </div>
+          </div>
+        </div>
+      </article>
+      
+      <!-- Comments Section -->
+      <section class="comments-section">
+        <h2 class="comments-title">
+          <span th:text="${commentCount}">0</span> Comments
+        </h2>
+        
+        <!-- Comment Form -->
+        <form class="comment-form" th:data-post-id="${post.postId}" th:action="@{'/api/comments/' + ${post.postId}}" method="post">
+          <div class="form-group">
+            <textarea name="content" class="form-textarea" placeholder="Share your thoughts..." rows="4"></textarea>
+          </div>
+          <div class="comment-form-actions">
+            <button type="submit" class="btn btn-primary">Post Comment</button>
+          </div>
+        </form>
+        
+        <!-- Comment List -->
+        <div class="comments-list">
+          <div th:each="comment : ${comments}" class="comment">
+            <img th:src="@{/images/avatar.svg}" alt="" class="comment-avatar">
+            <div class="comment-body">
+              <div class="comment-header">
+                <span class="comment-author" th:text="${comment.authorName}">Commenter</span>
+                <time class="comment-date" th:text="${#temporals.format(comment.createdAt, 'MMM d, yyyy')}">Jan 1, 2024</time>
+              </div>
+              <p class="comment-content" th:text="${comment.content}">Comment content...</p>
+              <div class="comment-actions">
+                <button class="comment-action" th:data-comment-id="${comment.commentId}" onclick="Comments.replyTo(this.dataset.commentId)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.3a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                  </svg>
+                  Reply
+                </button>
+                <button class="comment-action" th:data-comment-id="${comment.commentId}" onclick="LikeButton.toggle(this)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                  <span th:text="${comment.likesCount}">0</span>
+                </button>
+              </div>
+              
+              <!-- Nested Replies -->
+              <div class="comment-replies" th:if="${not #lists.isEmpty(comment.replies)}">
+                <div th:each="reply : ${comment.replies}" class="comment">
+                  <img th:src="@{/images/avatar.svg}" alt="" class="comment-avatar" style="width: 32px; height: 32px;">
+                  <div class="comment-body">
+                    <div class="comment-header">
+                      <span class="comment-author" th:text="${reply.authorName}">Reply Author</span>
+                      <time class="comment-date" th:text="${#temporals.format(reply.createdAt, 'MMM d, yyyy')}">Jan 1, 2024</time>
+                    </div>
+                    <p class="comment-content" th:text="${reply.content}">Reply content...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script th:src="@{/js/main.js}"></script>
+</body>
+</html>
